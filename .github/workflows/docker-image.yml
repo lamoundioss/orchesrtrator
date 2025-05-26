@@ -26,41 +26,41 @@ jobs:
     - name: Build & Push billing-app
       uses: docker/build-push-action@v5
       with:
-        context: Dockerfiles/play-with-containers/srcs/billing-app
+        context: Dockerfiles/srcs/billing-app
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/billing-app:latest
 
     - name: Build & Push inventory-app
       uses: docker/build-push-action@v5
       with:
-        context: Dockerfiles/play-with-containers/srcs/inventory-app
+        context: Dockerfiles/srcs/inventory-app
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/inventory-app:latest
 
     - name: Build & Push api-gateway-app
       uses: docker/build-push-action@v5
       with:
-        context: Dockerfiles/play-with-containers/srcs/api-gateway
+        context: Dockerfiles/srcs/api-gateway
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/api-gateway-app:latest
 
     - name: Build & Push rabbitmq
       uses: docker/build-push-action@v5
       with:
-        context: Dockerfiles/play-with-containers/srcs/rabbitmq
+        context: Dockerfiles/srcs/rabbitmq
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/rabbitmq:latest
 
     - name: Build & Push billing-database
       uses: docker/build-push-action@v5
       with:
-        context: Dockerfiles/play-with-containers/srcs/postgres
+        context: Dockerfiles/srcs/postgres
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/billing-database:latest
 
     - name: Build & Push inventory-database
       uses: docker/build-push-action@v5
       with:
-        context: Dockerfiles/play-with-containers/srcs/postgres
+        context: Dockerfiles/srcs/postgres
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/inventory-database:latest
