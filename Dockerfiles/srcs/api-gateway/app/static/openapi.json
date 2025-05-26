@@ -1,0 +1,228 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Movie Streaming Platform API Gateway",
+    "description": "This API Gateway serves as the entry point for the movie streaming platform.\nIt routes requests to the Inventory API (for managing movies) and the Billing API (for processing payments).\n",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:11111",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/api/movies": {
+      "get": {
+        "summary": "Get all movies or search by title",
+        "description": "Retrieve a list of all movies in the inventory. Optionally, search by title.",
+        "parameters": [
+          {
+            "name": "title",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter movies by title."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of movies matching the criteria",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Movie"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Add a new movie",
+        "description": "Add a new movie to the inventory.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Movie"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Movie created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Movie"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete all movies",
+        "description": "Remove all movies from the inventory.",
+        "responses": {
+          "204": {
+            "description": "All movies deleted successfully"
+          }
+        }
+      }
+    },
+    "/api/movies/{id}": {
+      "get": {
+        "summary": "Get a movie by ID",
+        "description": "Retrieve details of a specific movie.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Movie details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Movie"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a movie",
+        "description": "Update details of an existing movie.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Movie"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Movie updated successfully"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a movie",
+        "description": "Remove a movie from the inventory.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Movie deleted successfully"
+          }
+        }
+      }
+    },
+    "/api/billing": {
+      "post": {
+        "summary": "Process a payment",
+        "description": "Initiate payment processing for an order.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Payment request accepted and queued for processing"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Movie": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "title": {
+            "type": "string",
+            "example": "Inception"
+          },
+          "description": {
+            "type": "string",
+            "example": "A mind-bending thriller about dreams within dreams."
+          }
+        },
+        "required": [
+          "title",
+          "description"
+        ]
+      },
+      "PaymentRequest": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "example": "123"
+          },
+          "number_of_items": {
+            "type": "string",
+            "example": "5"
+          },
+          "total_amount": {
+            "type": "string",
+            "format": "float",
+            "example": "180"
+          }
+        },
+        "required": [
+          "user_id",
+          "number_of_items",
+          "total_amount"
+        ]
+      }
+    }
+  }
+}

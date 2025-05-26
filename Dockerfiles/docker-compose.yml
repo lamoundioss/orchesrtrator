@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  billing-app:
+    build: ./srcs/billing-app
+    container_name: billing-app
+    env_file:
+      - .env
+    depends_on:
+      billing-database:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: always
+    networks:
+      - play_with_containers_network
+
+  inventory-app:
+    build: ./srcs/inventory-app
+    container_name: inventory-app
+    env_file:
+      - .env
+    depends_on:
+      inventory-database:
+        condition: service_healthy
+    restart: always
+    networks:
+      - play_with_containers_network
+
+  api-gateway-app:
+    build: ./srcs/api-gateway
+    container_name: api-gateway-app
+    ports:
+    - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: always
+    networks:
+      - play_with_containers_network
+
+  billing-database:
+    build: ./srcs/postgres
+    container_name: billing-database
+    env_file:
+      - .env
+    volumes:
+      - billing-database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d orders"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: always
+    networks:
+      - play_with_containers_network
+
+  inventory-database:
+    build: ./srcs/postgres
+    container_name: inventory-database
+    env_file:
+      - .env
+    volumes:
+      - inventory-database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d orders"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: always
+    networks:
+      - play_with_containers_network
+
+  rabbitmq:
+    build: ./srcs/rabbitmq
+    container_name: RabbitMQ
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - play_with_containers_network
+    restart: always
+    volumes:
+      - api-gateway-app:/var/lib/rabbitmq
+
+networks:
+  play_with_containers_network:
+    driver: bridge
+
+volumes:
+  billing-database:
+  inventory-database:
+  api-gateway-app:

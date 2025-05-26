@@ -1,0 +1,22 @@
+# Fichiers Python compilés
+__pycache__/
+*.py[cod]
+
+# Environnement virtuel
+venv/
+.env
+
+# Fichiers de logs
+*.log
+
+# Configs système
+.DS_Store
+*.swp
+
+# Fichiers spécifiques à l'IDE
+.vscode/
+.idea/
+
+# Fichiers Docker
+*.pid
+*.sock
