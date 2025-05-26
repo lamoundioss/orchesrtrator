@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: billing-app
+  namespace: orchestrator
+  labels:
+    app: billing-app
+spec:
+  serviceName: billing-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: billing-app
+  template:
+    metadata:
+      labels:
+        app: billing-app
+    spec:
+      containers:
+      - name: billing-app
+        image: pasdev/crud_master-billing-app:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: RABBITMQ_USER
+          valueFrom:
+            secretKeyRef:
+              name: orchestrator-secret
+              key: RABBITMQ_USER
+        - name: RABBITMQ_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: orchestrator-secret
+              key: RABBITMQ_PASSWORD
+        - name: BILLING_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: orchestrator-secret
+              key: BILLING_DB_PASSWORD
+        envFrom:
+          - configMapRef:
+              name: orchestrator-configmap
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        # Waiting for the database to be available
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "Waiting for database at ${BILLING_DB_HOST}:${BILLING_DB_PORT}..."
+          timeout=120
+          counter=0
+          while ! nc -z ${BILLING_DB_HOST} ${BILLING_DB_PORT}; do
+            sleep 5
+            counter=$((counter+5))
+            if [ $counter -ge $timeout ]; then
+              echo "Timeout waiting for database connection!"
+              exit 1
+            fi
+            echo "Still waiting for database... ($counter seconds elapsed)"
+          done
+          echo "Database is available, starting application..."
+          # Execute the original command to start the application
+          exec node server.js

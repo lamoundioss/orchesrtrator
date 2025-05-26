@@ -1,0 +1,66 @@
+name: Build & Push Docker Images
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build & Push billing-app
+      uses: docker/build-push-action@v5
+      with:
+        context: Dockerfiles/play-with-containers/srcs/billing-app
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/billing-app:latest
+
+    - name: Build & Push inventory-app
+      uses: docker/build-push-action@v5
+      with:
+        context: Dockerfiles/play-with-containers/srcs/inventory-app
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/inventory-app:latest
+
+    - name: Build & Push api-gateway-app
+      uses: docker/build-push-action@v5
+      with:
+        context: Dockerfiles/play-with-containers/srcs/api-gateway
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/api-gateway-app:latest
+
+    - name: Build & Push rabbitmq
+      uses: docker/build-push-action@v5
+      with:
+        context: Dockerfiles/play-with-containers/srcs/rabbitmq
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/rabbitmq:latest
+
+    - name: Build & Push billing-database
+      uses: docker/build-push-action@v5
+      with:
+        context: Dockerfiles/play-with-containers/srcs/postgres
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/billing-database:latest
+
+    - name: Build & Push inventory-database
+      uses: docker/build-push-action@v5
+      with:
+        context: Dockerfiles/play-with-containers/srcs/postgres
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/inventory-database:latest
