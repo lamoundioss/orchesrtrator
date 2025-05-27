@@ -3,9 +3,8 @@ FROM alpine:3.21.3
 # Installer PostgreSQL et bash
 RUN apk add --no-cache postgresql15 postgresql15-client bash shadow
 
-# Créer l'utilisateur postgres avec UID et GID 999
-RUN groupadd -g 999 postgres && \
-    useradd -u 999 -g postgres -s /bin/sh -d /var/lib/postgresql postgres
+# Forcer seulement l'UID si le GID 999 existe déjà
+RUN usermod -u 999 postgres || echo "UID not changed"
 
 # Créer les répertoires PostgreSQL
 RUN mkdir -p /run/postgresql && \
