@@ -4,8 +4,8 @@ FROM alpine:3.21.3
 RUN apk add --no-cache postgresql15 postgresql15-client bash
 
 # Création de l'utilisateur postgres avec UID 999
-RUN addgroup -g 999 postgres && \
-    adduser -u 999 -G postgres -D -s /bin/sh postgres
+RUN groupadd -g 999 postgres && \
+    useradd -u 999 -g postgres -s /bin/sh -d /var/lib/postgresql postgres
 
 # Création des répertoires nécessaires
 RUN mkdir -p /run/postgresql && \
