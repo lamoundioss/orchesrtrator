@@ -3,10 +3,8 @@ kind: StatefulSet
 metadata:
   name: billing-database
   namespace: orchestrator
-  labels:
-    app: billing-database
 spec:
-  serviceName: billing-database-service
+  serviceName: billing-database
   replicas: 1
   selector:
     matchLabels:
@@ -16,56 +14,51 @@ spec:
       labels:
         app: billing-database
     spec:
+      securityContext:
+        fsGroup: 999
       containers:
-      - name: billing-database
-        image: pasdev/crud_master-billing-database:latest
+      - name: postgres
+        image: postgres:13-alpine
+        securityContext:
+          runAsUser: 999
+          runAsGroup: 999
         ports:
         - containerPort: 5432
-          name: postgres
         env:
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
               name: orchestrator-secret
-              key: BILLING_DB_PASSWORD
+              key: POSTGRES_PASSWORD
         - name: POSTGRES_USER
-          value: admin
+          valueFrom:
+            secretKeyRef:
+              name: orchestrator-secret
+              key: POSTGRES_USER
         - name: POSTGRES_DB
-          value: billing_db
-        envFrom:
-        - configMapRef:
-            name: orchestrator-configmap
+          value: orders
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
         volumeMounts:
         - name: data
           mountPath: /var/lib/postgresql/data
-          subPath: postgresql-db
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "200m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - pg_isready -U admin -d billing_db
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
+          subPath: pgdata
         readinessProbe:
           exec:
             command:
-            - sh
-            - -c
-            - pg_isready -U admin -d billing_db
-          initialDelaySeconds: 10
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 5
           periodSeconds: 5
-          timeoutSeconds: 5
-          failureThreshold: 3
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 30
+          periodSeconds: 10
   volumeClaimTemplates:
   - metadata:
       name: data

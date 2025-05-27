@@ -6,7 +6,7 @@ metadata:
 data:
   # API Gateway
   PORT: "3000"
-  INVENTORY_SERVICE_URL: "http://inventory-app:8080"
+  # INVENTORY_SERVICE_URL: "http://inventory-app:8080"
   
   # Inventory Database
   INVENTORY_DB_HOST: "inventory-database"
@@ -15,7 +15,7 @@ data:
   INVENTORY_DB_USER: "admin"
   
   # Billing Database
-  BILLING_DB_HOST: "billing-database"
+  BILLING_DB_HOST: "billing-database-service"
   BILLING_DB_PORT: "5432"
   BILLING_DB_NAME: "billing_db"
   BILLING_DB_USER: "admin"
@@ -23,3 +23,14 @@ data:
   # RabbitMQ
   RABBITMQ_HOST: "rabbitmq-service"
   RABBITMQ_PORT: "5672"
+  RABBITMQ_DEFAULT_USER: "vagrant_user"
+
+  ############################################
+
+  BILLING_DATABASE_HOST: "billing-database-service"
+  INVENTORY_DATABASE_HOST: "inventory-database"
+
+  DB_PORT: "5432"
+  POSTGRES_DB: "orders"
+
+  INVENTORY_SERVICE_URL: http://inventory-app:8080/movies

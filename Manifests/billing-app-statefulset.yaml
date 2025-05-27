@@ -18,25 +18,30 @@ spec:
     spec:
       containers:
       - name: billing-app
-        image: pasdev/crud_master-billing-app:latest
+        image: lamoundios7/billing-app
         ports:
         - containerPort: 8080
         env:
-        - name: RABBITMQ_USER
+        - name: RABBITMQ_DEFAULT_USER
           valueFrom:
             secretKeyRef:
               name: orchestrator-secret
-              key: RABBITMQ_USER
-        - name: RABBITMQ_PASSWORD
+              key: RABBITMQ_DEFAULT_USER
+        - name: RABBITMQ_DEFAULT_PASS
           valueFrom:
             secretKeyRef:
               name: orchestrator-secret
-              key: RABBITMQ_PASSWORD
-        - name: BILLING_DB_PASSWORD
+              key: RABBITMQ_DEFAULT_PASS
+        - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
               name: orchestrator-secret
-              key: BILLING_DB_PASSWORD
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: orchestrator-secret
+              key: POSTGRES_USER
         envFrom:
           - configMapRef:
               name: orchestrator-configmap
@@ -64,5 +69,5 @@ spec:
             echo "Still waiting for database... ($counter seconds elapsed)"
           done
           echo "Database is available, starting application..."
-          # Execute the original command to start the application
-          exec node server.js
+          # Démarrer l'application Python
+          exec venv/bin/python server.py

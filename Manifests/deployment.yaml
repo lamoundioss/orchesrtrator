@@ -26,7 +26,7 @@ spec:
             topologyKey: "kubernetes.io/hostname"
       containers:
       - name: api-gateway
-        image: pasdev/crud_master-api-gateway:latest
+        image: lamoundios7/api-gateway-app
         ports:
         - containerPort: 3000
         env:
@@ -35,22 +35,40 @@ spec:
             configMapKeyRef:
               name: orchestrator-configmap
               key: PORT
-        - name: INVENTORY_SERVICE_URL
+        # - name: INVENTORY_SERVICE_URL
+        #   valueFrom:
+        #     configMapKeyRef:
+        #       name: orchestrator-configmap
+        #       key: INVENTORY_SERVICE_URL
+        - name: RABBITMQ_HOST
+          # value: "rabbitmq-service"
           valueFrom:
             configMapKeyRef:
               name: orchestrator-configmap
-              key: INVENTORY_SERVICE_URL
-        - name: RABBITMQ_HOST
-          value: "rabbitmq-service"
+              key: RABBITMQ_HOST
         - name: RABBITMQ_PORT
           valueFrom:
             configMapKeyRef:
               name: orchestrator-configmap
               key: RABBITMQ_PORT
-        - name: RABBITMQ_USER
-          value: "guest"
-        - name: RABBITMQ_PASSWORD
-          value: "guest"
+        - name: RABBITMQ_DEFAULT_USER
+          # value: "guest"
+          valueFrom:
+            configMapKeyRef:
+              name: orchestrator-configmap
+              key: RABBITMQ_DEFAULT_USER
+        - name: RABBITMQ_DEFAULT_PASS
+          # value: "guest"
+          valueFrom:
+            secretKeyRef:
+              name: orchestrator-secret
+              key: RABBITMQ_DEFAULT_PASS
+        - name: INVENTORY_SERVICE_URL
+          # value: "guest"
+          valueFrom:
+            secretKeyRef:
+              name: orchestrator-secret
+              key: INVENTORY_SERVICE_URL
         resources:
           requests:
             cpu: "100m"
@@ -158,7 +176,7 @@ spec:
                 - rabbitmq
             topologyKey: "kubernetes.io/hostname"
       containers:
-      - image: rabbitmq:3-management
+      - image: lamoundios7/rabbitmq
         name: rabbitmq-app
         ports:
         - containerPort: 5672
@@ -168,12 +186,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: orchestrator-secret
-              key: RABBITMQ_PASSWORD
+              key: RABBITMQ_DEFAULT_PASS
         - name: RABBITMQ_DEFAULT_USER
           valueFrom:
             secretKeyRef:
               name: orchestrator-secret
-              key: RABBITMQ_USER
+              key: RABBITMQ_DEFAULT_USER
         envFrom:
         - configMapRef:
             name: orchestrator-configmap

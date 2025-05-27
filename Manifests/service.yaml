@@ -135,11 +135,9 @@ metadata:
   name: traefik-dashboard
   namespace: kube-system
 spec:
-  type: NodePort
   selector:
     app.kubernetes.io/name: traefik
   ports:
-    - name: dashboard
-      port: 8080
-      targetPort: 8080
-      nodePort: 30003
+  - port: 8080
+    targetPort: 8080
+    name: dashboard
