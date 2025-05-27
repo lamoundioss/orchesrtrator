@@ -1,18 +1,18 @@
 FROM alpine:3.21.3
 
-# Installation de PostgreSQL avec client
-RUN apk add --no-cache postgresql15 postgresql15-client bash
+# Installer PostgreSQL et bash
+RUN apk add --no-cache postgresql15 postgresql15-client bash shadow
 
-# Création de l'utilisateur postgres avec UID 999
+# Créer l'utilisateur postgres avec UID et GID 999
 RUN groupadd -g 999 postgres && \
     useradd -u 999 -g postgres -s /bin/sh -d /var/lib/postgresql postgres
 
-# Création des répertoires nécessaires
+# Créer les répertoires PostgreSQL
 RUN mkdir -p /run/postgresql && \
     mkdir -p /var/lib/postgresql/data && \
     chown -R postgres:postgres /run/postgresql /var/lib/postgresql
 
-# Copie du script d'initialisation
+# Script d'initialisation
 COPY init.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/init.sh
 
