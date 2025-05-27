@@ -18,7 +18,7 @@ spec:
         fsGroup: 999
       containers:
       - name: postgres
-        image: postgres:13-alpine
+        image: lamoundios7/postgres
         securityContext:
           runAsUser: 999
           runAsGroup: 999

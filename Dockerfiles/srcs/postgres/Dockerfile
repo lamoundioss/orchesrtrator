@@ -5,7 +5,7 @@ RUN apk add --no-cache postgresql15 postgresql15-client bash
 
 # Création de l'utilisateur postgres avec UID 999
 RUN addgroup -g 999 postgres && \
-    adduser -u 999 -G postgres -D -s /bin/bash postgres
+    adduser -u 999 -G postgres -D -s /bin/sh postgres
 
 # Création des répertoires nécessaires
 RUN mkdir -p /run/postgresql && \
