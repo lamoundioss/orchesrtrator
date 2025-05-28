@@ -18,7 +18,6 @@ adjust_postgres_user() {
         local existing_group_999=$(getent group 999 | cut -d: -f1 2>/dev/null || echo "")
         if [ -n "$existing_group_999" ] && [ "$existing_group_999" != "postgres" ]; then
             echo "GID 999 is used by group '$existing_group_999', changing it to avoid conflict..."
-            # Changer le GID du groupe existant vers un ID libre
             local new_gid=1999
             while getent group $new_gid > /dev/null 2>&1; do
                 new_gid=$((new_gid + 1))
@@ -31,7 +30,6 @@ adjust_postgres_user() {
         local existing_user_999=$(getent passwd 999 | cut -d: -f1 2>/dev/null || echo "")
         if [ -n "$existing_user_999" ] && [ "$existing_user_999" != "postgres" ]; then
             echo "UID 999 is used by user '$existing_user_999', changing it to avoid conflict..."
-            # Changer l'UID de l'utilisateur existant vers un ID libre
             local new_uid=1999
             while getent passwd $new_uid > /dev/null 2>&1; do
                 new_uid=$((new_uid + 1))
@@ -40,7 +38,7 @@ adjust_postgres_user() {
             echo "Moved user '$existing_user_999' to UID $new_uid"
         fi
         
-        # Maintenant modifier le groupe postgres
+        # Modifier le groupe postgres
         if [ "$current_gid_postgres" != "999" ]; then
             groupmod -g 999 postgres
         fi
@@ -62,6 +60,12 @@ adjust_postgres_user() {
 # Vérification de l'environnement
 echo "Current user: $(id)"
 echo "PGDATA: $PGDATA"
+
+# Créer le répertoire /run/postgresql avec les bonnes permissions
+echo "Creating /run/postgresql directory if it doesn't exist..."
+mkdir -p /run/postgresql
+chown postgres:postgres /run/postgresql
+chmod 700 /run/postgresql
 
 # Ajuster l'utilisateur postgres si nécessaire
 adjust_postgres_user
