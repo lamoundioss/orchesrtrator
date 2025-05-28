@@ -5,6 +5,7 @@ RUN apk add --no-cache \
     postgresql15 \
     postgresql15-client \
     bash \
+    shadow \
     && mkdir -p /var/lib/postgresql/data \
     && chown -R postgres:postgres /var/lib/postgresql \
     && chmod 700 /var/lib/postgresql/data
