@@ -67,6 +67,17 @@ mkdir -p /run/postgresql
 chown postgres:postgres /run/postgresql
 chmod 700 /run/postgresql
 
+# Vérifier si /run/postgresql est accessible, sinon utiliser /tmp/postgresql
+if [ ! -w /run/postgresql ]; then
+    echo "Warning: /run/postgresql is not writable, using /tmp/postgresql instead"
+    export PGHOST=/tmp/postgresql
+    mkdir -p /tmp/postgresql
+    chown postgres:postgres /tmp/postgresql
+    chmod 700 /tmp/postgresql
+else
+    export PGHOST=/run/postgresql
+fi
+
 # Ajuster l'utilisateur postgres si nécessaire
 adjust_postgres_user
 
@@ -79,6 +90,7 @@ fi
 
 echo "Final postgres user info: $(getent passwd postgres)"
 echo "Contents of data directory: $(ls -la $PGDATA/ 2>/dev/null || echo 'Directory empty or does not exist')"
+echo "Using PGHOST: $PGHOST for lock files"
 
 # Passer à l'utilisateur postgres pour les opérations PostgreSQL
 echo "Switching to postgres user for database operations..."
