@@ -6,8 +6,8 @@ RUN apk add --no-cache \
     postgresql15-client \
     bash \
     && mkdir -p /var/lib/postgresql/data \
-    && addgroup -g 999 postgres || true \
-    && adduser -D -u 999 -G postgres postgres || true \
+    && addgroup -g 999 postgres \
+    && adduser -D -u 999 -G postgres -h /var/lib/postgresql -s /bin/bash postgres \
     && chown -R postgres:postgres /var/lib/postgresql \
     && chmod 700 /var/lib/postgresql/data
 

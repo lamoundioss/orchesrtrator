@@ -1,10 +1,22 @@
 #!/bin/bash
 set -e
 
-# Vérification des permissions
+# Création de l'utilisateur postgres s'il n'existe pas
+if ! getent passwd postgres > /dev/null 2>&1; then
+    echo "Creating postgres user..."
+    addgroup -g 999 postgres 2>/dev/null || true
+    adduser -D -u 999 -G postgres -h /var/lib/postgresql -s /bin/bash postgres 2>/dev/null || true
+fi
+
+# Vérification des permissions et de l'utilisateur
 echo "Current user: $(id)"
+echo "User info: $(getent passwd postgres)"
 echo "PGDATA: $PGDATA"
+echo "Working directory: $(pwd)"
 echo "Contents of data directory: $(ls -la $PGDATA/ 2>/dev/null || echo 'Directory empty or does not exist')"
+
+# S'assurer des bonnes permissions
+chown -R postgres:postgres /var/lib/postgresql 2>/dev/null || true
 
 # Initialisation si le répertoire est vide
 if [ -z "$(ls -A $PGDATA 2>/dev/null)" ]; then

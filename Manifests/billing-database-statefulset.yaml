@@ -41,7 +41,11 @@ spec:
         securityContext:
           runAsUser: 999
           runAsGroup: 999
-          allowPrivilegeEscalation: false
+          allowPrivilegeEscalation: true  # Nécessaire pour les opérations de gestion d'utilisateur
+          capabilities:
+            add:
+            - CHOWN
+            - FOWNER
         ports:
         - containerPort: 5432
         env:
