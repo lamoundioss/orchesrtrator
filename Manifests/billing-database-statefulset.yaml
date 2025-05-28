@@ -16,8 +16,6 @@ spec:
     spec:
       securityContext:
         fsGroup: 999
-        runAsUser: 999
-        runAsGroup: 999
       initContainers:
       - name: init-db
         image: alpine:3.21.3
@@ -39,13 +37,8 @@ spec:
       - name: postgres
         image: lamoundios7/billing-database:latest
         securityContext:
-          runAsUser: 999
-          runAsGroup: 999
-          allowPrivilegeEscalation: true  # Nécessaire pour les opérations de gestion d'utilisateur
-          capabilities:
-            add:
-            - CHOWN
-            - FOWNER
+          runAsUser: 0  # Nécessaire pour ajuster l'utilisateur postgres
+          allowPrivilegeEscalation: true
         ports:
         - containerPort: 5432
         env:
