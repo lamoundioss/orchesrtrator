@@ -4,9 +4,10 @@ FROM alpine:3.21.3
 RUN apk add --no-cache \
     postgresql15 \
     postgresql15-client \
-    su-exec \
     bash \
     && mkdir -p /var/lib/postgresql/data \
+    && addgroup -g 999 postgres || true \
+    && adduser -D -u 999 -G postgres postgres || true \
     && chown -R postgres:postgres /var/lib/postgresql \
     && chmod 700 /var/lib/postgresql/data
 
@@ -14,8 +15,7 @@ RUN apk add --no-cache \
 COPY init.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/init.sh
 
-# Configuration immuable
-USER postgres
+# Configuration
 WORKDIR /var/lib/postgresql
 ENV PGDATA=/var/lib/postgresql/data
 EXPOSE 5432

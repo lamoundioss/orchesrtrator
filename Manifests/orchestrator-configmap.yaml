@@ -31,7 +31,7 @@ data:
   INVENTORY_DATABASE_HOST: "inventory-database"
 
   DB_PORT: "5432"
-  POSTGRES_DB: "orders"
+  POSTGRES_DB: "admin"
 
   INVENTORY_SERVICE_URL: http://inventory-app:8080/movies
   READONLY_USER: "reporter"

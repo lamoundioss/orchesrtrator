@@ -16,37 +16,37 @@ spec:
     spec:
       securityContext:
         fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
       initContainers:
       - name: init-db
-        image: lamoundios7/billing-database:latest
-        command: ["sh", "-c", "chown -R 999:999 /var/lib/postgresql/data && su-exec postgres initdb -D /var/lib/postgresql/data/pgdata"]
+        image: alpine:3.21.3
+        securityContext:
+          runAsUser: 0  # Nécessaire pour chown
+        command: 
+        - sh
+        - -c
+        - |
+          echo "Initializing data directory permissions..."
+          mkdir -p /var/lib/postgresql/data
+          chown -R 999:999 /var/lib/postgresql/data
+          chmod 700 /var/lib/postgresql/data
+          echo "Permissions set successfully"
         volumeMounts:
         - name: data
           mountPath: /var/lib/postgresql/data
-          subPath: pgdata
       containers:
       - name: postgres
         image: lamoundios7/billing-database:latest
         securityContext:
           runAsUser: 999
           runAsGroup: 999
+          allowPrivilegeEscalation: false
         ports:
         - containerPort: 5432
-        # env:
-        # - name: POSTGRES_PASSWORD
-        #   valueFrom:
-        #     secretKeyRef:
-        #       name: orchestrator-secret
-        #       key: POSTGRES_PASSWORD
-        # - name: POSTGRES_USER
-        #   valueFrom:
-        #     secretKeyRef:
-        #       name: orchestrator-secret
-        #       key: POSTGRES_USER
-        # - name: POSTGRES_DB
-        #   value: orders
-        # - name: PGDATA
-          value: /var/lib/postgresql/data/pgdata
+        env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data
         envFrom:
         - configMapRef:
             name: orchestrator-configmap
@@ -55,7 +55,6 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /var/lib/postgresql/data
-          subPath: pgdata
         readinessProbe:
           exec:
             command:
