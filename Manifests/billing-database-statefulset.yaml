@@ -16,29 +16,42 @@ spec:
     spec:
       securityContext:
         fsGroup: 999
+      initContainers:
+      - name: init-db
+        image: lamoundios7/billing-database:latest
+        command: ["sh", "-c", "chown -R 999:999 /var/lib/postgresql/data && su-exec postgres initdb -D /var/lib/postgresql/data/pgdata"]
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+          subPath: pgdata
       containers:
       - name: postgres
-        image: lamoundios7/postgres
+        image: lamoundios7/billing-database:latest
         securityContext:
           runAsUser: 999
           runAsGroup: 999
         ports:
         - containerPort: 5432
-        env:
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: orchestrator-secret
-              key: POSTGRES_PASSWORD
-        - name: POSTGRES_USER
-          valueFrom:
-            secretKeyRef:
-              name: orchestrator-secret
-              key: POSTGRES_USER
-        - name: POSTGRES_DB
-          value: orders
-        - name: PGDATA
+        # env:
+        # - name: POSTGRES_PASSWORD
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: orchestrator-secret
+        #       key: POSTGRES_PASSWORD
+        # - name: POSTGRES_USER
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: orchestrator-secret
+        #       key: POSTGRES_USER
+        # - name: POSTGRES_DB
+        #   value: orders
+        # - name: PGDATA
           value: /var/lib/postgresql/data/pgdata
+        envFrom:
+        - configMapRef:
+            name: orchestrator-configmap
+        - secretRef:
+            name: orchestrator-secret
         volumeMounts:
         - name: data
           mountPath: /var/lib/postgresql/data
@@ -49,16 +62,18 @@ spec:
             - pg_isready
             - -U
             - postgres
-          initialDelaySeconds: 5
-          periodSeconds: 5
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
         livenessProbe:
           exec:
             command:
             - pg_isready
             - -U
             - postgres
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          initialDelaySeconds: 45
+          periodSeconds: 20
+          timeoutSeconds: 5
   volumeClaimTemplates:
   - metadata:
       name: data

@@ -34,3 +34,5 @@ data:
   POSTGRES_DB: "orders"
 
   INVENTORY_SERVICE_URL: http://inventory-app:8080/movies
+  READONLY_USER: "reporter"
+  APP_DB_NAME: "app_analytics"

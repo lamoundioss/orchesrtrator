@@ -1,31 +1,31 @@
 #!/bin/bash
 set -e
 
-# Vérifier si la base doit être initialisée
-if [ -z "$(ls -A /var/lib/postgresql/data)" ]; then
-    echo "Initializing PostgreSQL database..."
+if [ -z "$(ls -A $PGDATA)" ]; then
+    su-exec postgres initdb
     
-    # Initialisation de la base
-    initdb -D /var/lib/postgresql/data
+    su-exec postgres pg_ctl -D $PGDATA -w start
     
-    # Configuration
-    echo "host all all 0.0.0.0/0 md5" >> /var/lib/postgresql/data/pg_hba.conf
-    echo "listen_addresses='*'" >> /var/lib/postgresql/data/postgresql.conf
-
-    # Démarrage temporaire
-    pg_ctl -D /var/lib/postgresql/data -o '-c listen_addresses=localhost' -w start
-
-    # Configuration utilisateur et base
-    psql -v ON_ERROR_STOP=1 --username postgres <<-EOSQL
-        ALTER USER ${POSTGRES_USER:user} WITH PASSWORD '${POSTGRES_PASSWORD:-test}';
-        CREATE DATABASE ${POSTGRES_DB:-db};
+    # Valeurs par défaut si non définies
+    local MAIN_USER="${POSTGRES_USER:-postgres}"
+    local MAIN_DB="${POSTGRES_DB:-$MAIN_USER}"
+    
+    su-exec postgres psql <<-EOSQL
+        -- Création utilisateur principal (doit exister dans les Secrets)
+        CREATE USER "${MAIN_USER}" WITH PASSWORD '${POSTGRES_PASSWORD}';
+        
+        -- Création utilisateurs/bases supplémentaires (ConfigMap)
+        CREATE USER "${READONLY_USER}" WITH PASSWORD '${READONLY_PASSWORD}';
+        CREATE DATABASE "${MAIN_DB}" WITH OWNER "${MAIN_USER}";
+        CREATE DATABASE "${APP_DB_NAME}" WITH OWNER "${MAIN_USER}";
+        
+        -- Permissions
+        GRANT CONNECT ON DATABASE "${APP_DB_NAME}" TO "${READONLY_USER}";
+        \c "${APP_DB_NAME}"
+        GRANT SELECT ON ALL TABLES IN SCHEMA public TO "${READONLY_USER}";
 EOSQL
 
-    # Arrêt propre
-    pg_ctl -D /var/lib/postgresql/data -m fast -w stop
-    
-    echo "PostgreSQL initialization complete!"
+    su-exec postgres pg_ctl -D $PGDATA -m fast -w stop
 fi
 
-# Démarrer PostgreSQL
-exec "$@"
+exec su-exec postgres "$@"
