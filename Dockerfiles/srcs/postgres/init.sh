@@ -162,6 +162,15 @@ else
     echo "Database already initialized."
 fi
 
+
 # Démarrage final avec l'utilisateur postgres
 echo "Starting PostgreSQL..."
+echo "Vérification des permissions de /run/postgresql : $(ls -ld /run/postgresql)"
+if [ ! -w /run/postgresql ]; then
+    echo "Erreur : /run/postgresql non accessible en écriture, passage à /tmp/postgresql"
+    export PGHOST=/tmp/postgresql
+    mkdir -p /tmp/postgresql
+    chown postgres:postgres /tmp/postgresql
+    chmod 700 /tmp/postgresql
+fi
 exec su postgres -c "$*"
