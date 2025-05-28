@@ -15,7 +15,7 @@ spec:
         app: billing-database
     spec:
       securityContext:
-        fsGroup: 999
+        fsGroup: 70  # GID par défaut de postgres dans Alpine
       initContainers:
       - name: init-db
         image: alpine:3.21.3
@@ -27,7 +27,7 @@ spec:
         - |
           echo "Initializing data directory permissions..."
           mkdir -p /var/lib/postgresql/data
-          chown -R 999:999 /var/lib/postgresql/data
+          chown -R 70:70 /var/lib/postgresql/data  # UID/GID par défaut de postgres
           chmod 700 /var/lib/postgresql/data
           echo "Permissions set successfully"
         volumeMounts:
