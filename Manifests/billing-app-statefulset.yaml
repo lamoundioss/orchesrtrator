@@ -21,30 +21,11 @@ spec:
         image: lamoundios7/billing-app
         ports:
         - containerPort: 8080
-        env:
-        - name: RABBITMQ_DEFAULT_USER
-          valueFrom:
-            secretKeyRef:
-              name: orchestrator-secret
-              key: RABBITMQ_DEFAULT_USER
-        - name: RABBITMQ_DEFAULT_PASS
-          valueFrom:
-            secretKeyRef:
-              name: orchestrator-secret
-              key: RABBITMQ_DEFAULT_PASS
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: orchestrator-secret
-              key: POSTGRES_PASSWORD
-        - name: POSTGRES_USER
-          valueFrom:
-            secretKeyRef:
-              name: orchestrator-secret
-              key: POSTGRES_USER
         envFrom:
-          - configMapRef:
-              name: orchestrator-configmap
+        - configMapRef:
+            name: orchestrator-configmap
+        - secretRef:
+            name: orchestrator-secret
         resources:
           requests:
             memory: "128Mi"

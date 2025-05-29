@@ -10,7 +10,15 @@ chmod 700 /var/lib/postgresql/data
 # Variables d'environnement avec valeurs par défaut basées sur votre ConfigMap/Secret
 export POSTGRES_DB="${BILLING_DB_NAME:-billing_db}"
 export POSTGRES_USER="${BILLING_DB_USER:-admin}"
-export POSTGRES_PASSWORD="${BILLING_DB_PASSWORD:-passer}"
+
+# Décoder le mot de passe de base64 en string
+if [ -n "$BILLING_DB_PASSWORD" ]; then
+    export POSTGRES_PASSWORD=$(echo "$BILLING_DB_PASSWORD" | base64 -d)
+    echo "Mot de passe décodé depuis base64"
+else
+    export POSTGRES_PASSWORD="passer"
+    echo "Utilisation du mot de passe par défaut"
+fi
 
 # Initialiser la base si elle n'existe pas
 if [ ! -s "$PGDATA/PG_VERSION" ]; then

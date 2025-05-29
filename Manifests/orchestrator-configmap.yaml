@@ -18,7 +18,7 @@ data:
   BILLING_DB_HOST: "billing-database-service"
   BILLING_DB_PORT: "5432"
   BILLING_DB_NAME: "billing_db"
-  BILLING_DB_USER: "admin"
+  BILLING_DB_USER: "ndiogou"
   
   # RabbitMQ
   RABBITMQ_HOST: "rabbitmq-service"
