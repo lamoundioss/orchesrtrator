@@ -24,25 +24,63 @@ if [ ! -s "$PGDATA/PG_VERSION" ]; then
     echo "listen_addresses='*'" >> "$PGDATA/postgresql.conf"
     echo "port = 5432" >> "$PGDATA/postgresql.conf"
     
-    # Démarrer PostgreSQL temporairement pour créer la base et l'utilisateur
-    su-exec postgres pg_ctl -D "$PGDATA" start -w -o "-F"
-    
-    # Attendre que PostgreSQL soit prêt
-    sleep 2
-    
-    # Créer la base de données et l'utilisateur
+    # Marquer que l'initialisation est nécessaire
+    NEED_INIT=true
+else
+    echo "PostgreSQL déjà initialisé, vérification des utilisateurs..."
+    NEED_INIT=false
+fi
+
+# Démarrer PostgreSQL temporairement pour créer/vérifier la base et l'utilisateur
+echo "Démarrage temporaire de PostgreSQL pour configuration..."
+su-exec postgres pg_ctl -D "$PGDATA" start -w -o "-F"
+
+# Attendre que PostgreSQL soit prêt
+sleep 3
+
+# Créer la base de données et l'utilisateur si nécessaire
+if [ "$NEED_INIT" = true ]; then
+    echo "Création de la base de données et de l'utilisateur..."
     su-exec postgres psql -v ON_ERROR_STOP=1 <<-EOSQL
         CREATE DATABASE ${POSTGRES_DB};
         CREATE USER ${POSTGRES_USER} WITH PASSWORD '${POSTGRES_PASSWORD}';
         GRANT ALL PRIVILEGES ON DATABASE ${POSTGRES_DB} TO ${POSTGRES_USER};
         ALTER USER ${POSTGRES_USER} CREATEDB;
 EOSQL
+else
+    # Vérifier si l'utilisateur existe, sinon le créer
+    echo "Vérification de l'existence de l'utilisateur ${POSTGRES_USER}..."
+    USER_EXISTS=$(su-exec postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='${POSTGRES_USER}';" || echo "")
     
-    echo "Base de données ${POSTGRES_DB} créée avec utilisateur ${POSTGRES_USER}"
+    if [ -z "$USER_EXISTS" ]; then
+        echo "Création de l'utilisateur ${POSTGRES_USER}..."
+        su-exec postgres psql -v ON_ERROR_STOP=1 <<-EOSQL
+            CREATE USER ${POSTGRES_USER} WITH PASSWORD '${POSTGRES_PASSWORD}';
+            ALTER USER ${POSTGRES_USER} CREATEDB;
+EOSQL
+    fi
     
-    # Arrêter PostgreSQL
-    su-exec postgres pg_ctl -D "$PGDATA" stop -w
+    # Vérifier si la base existe, sinon la créer
+    echo "Vérification de l'existence de la base ${POSTGRES_DB}..."
+    DB_EXISTS=$(su-exec postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='${POSTGRES_DB}';" || echo "")
+    
+    if [ -z "$DB_EXISTS" ]; then
+        echo "Création de la base de données ${POSTGRES_DB}..."
+        su-exec postgres psql -v ON_ERROR_STOP=1 <<-EOSQL
+            CREATE DATABASE ${POSTGRES_DB};
+EOSQL
+    fi
+    
+    # S'assurer que l'utilisateur a les permissions sur la base
+    su-exec postgres psql -v ON_ERROR_STOP=1 <<-EOSQL
+        GRANT ALL PRIVILEGES ON DATABASE ${POSTGRES_DB} TO ${POSTGRES_USER};
+EOSQL
 fi
+
+echo "Configuration terminée. Base: ${POSTGRES_DB}, Utilisateur: ${POSTGRES_USER}"
+
+# Arrêter PostgreSQL
+su-exec postgres pg_ctl -D "$PGDATA" stop -w
 
 # Démarrer PostgreSQL de façon permanente
 echo "Démarrage de PostgreSQL..."
