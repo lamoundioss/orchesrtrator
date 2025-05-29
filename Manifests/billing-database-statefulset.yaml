@@ -3,8 +3,10 @@ kind: StatefulSet
 metadata:
   name: billing-database
   namespace: orchestrator
+  labels:
+    app: billing-database
 spec:
-  serviceName: billing-database
+  serviceName: billing-database-service
   replicas: 1
   selector:
     matchLabels:
@@ -14,36 +16,14 @@ spec:
       labels:
         app: billing-database
     spec:
-      securityContext:
-        fsGroup: 70  # GID par défaut de postgres dans Alpine
-      initContainers:
-      - name: init-db
-        image: alpine:3.21.3
-        securityContext:
-          runAsUser: 0  # Nécessaire pour chown
-        command: 
-        - sh
-        - -c
-        - |
-          echo "Initializing data directory permissions..."
-          mkdir -p /var/lib/postgresql/data
-          chown -R 70:70 /var/lib/postgresql/data  # UID/GID par défaut de postgres
-          chmod 700 /var/lib/postgresql/data
-          echo "Permissions set successfully"
-        volumeMounts:
-        - name: data
-          mountPath: /var/lib/postgresql/data
       containers:
-      - name: postgres
+      - name: billing-database
         image: lamoundios7/billing-database:latest
         securityContext:
           runAsUser: 0  # Nécessaire pour ajuster l'utilisateur postgres
           allowPrivilegeEscalation: true
         ports:
         - containerPort: 5432
-        env:
-        - name: PGDATA
-          value: /var/lib/postgresql/data
         envFrom:
         - configMapRef:
             name: orchestrator-configmap
@@ -52,24 +32,34 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /var/lib/postgresql/data
-        readinessProbe:
-          exec:
-            command:
-            - pg_isready
-            - -U
-            - postgres
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
+          subPath: postgresql-db
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
         livenessProbe:
           exec:
             command:
-            - pg_isready
-            - -U
-            - postgres
-          initialDelaySeconds: 45
-          periodSeconds: 20
+            - sh
+            - -c
+            - pg_isready -U admin -d billing_db
+          initialDelaySeconds: 30
+          periodSeconds: 10
           timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - pg_isready -U admin -d billing_db
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
   volumeClaimTemplates:
   - metadata:
       name: data
@@ -78,3 +68,4 @@ spec:
       resources:
         requests:
           storage: 1Gi
+

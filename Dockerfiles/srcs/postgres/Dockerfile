@@ -5,7 +5,7 @@ RUN apk add --no-cache \
     postgresql15 \
     postgresql15-client \
     bash \
-    shadow \
+    su-exec \
     && mkdir -p /var/lib/postgresql/data \
     && chown -R postgres:postgres /var/lib/postgresql \
     && chmod 700 /var/lib/postgresql/data
@@ -19,5 +19,5 @@ WORKDIR /var/lib/postgresql
 ENV PGDATA=/var/lib/postgresql/data
 EXPOSE 5432
 
+# Démarrer en tant que root pour permettre à Kubernetes de gérer les permissions
 ENTRYPOINT ["/usr/local/bin/init.sh"]
-CMD ["postgres", "-D", "/var/lib/postgresql/data"]
