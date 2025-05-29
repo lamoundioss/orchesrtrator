@@ -55,6 +55,15 @@ if [ "$NEED_INIT" = true ]; then
         GRANT ALL PRIVILEGES ON DATABASE ${POSTGRES_DB} TO ${POSTGRES_USER};
         ALTER USER ${POSTGRES_USER} CREATEDB;
 EOSQL
+    
+    # Se connecter à la base créée pour donner les permissions sur le schéma public
+    su-exec postgres psql -d ${POSTGRES_DB} -v ON_ERROR_STOP=1 <<-EOSQL
+        GRANT ALL ON SCHEMA public TO ${POSTGRES_USER};
+        GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ${POSTGRES_USER};
+        GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${POSTGRES_USER};
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${POSTGRES_USER};
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO ${POSTGRES_USER};
+EOSQL
 else
     # Vérifier si l'utilisateur existe, sinon le créer
     echo "Vérification de l'existence de l'utilisateur ${POSTGRES_USER}..."
@@ -79,9 +88,17 @@ EOSQL
 EOSQL
     fi
     
-    # S'assurer que l'utilisateur a les permissions sur la base
+    # S'assurer que l'utilisateur a les permissions sur la base ET le schéma public
     su-exec postgres psql -v ON_ERROR_STOP=1 <<-EOSQL
         GRANT ALL PRIVILEGES ON DATABASE ${POSTGRES_DB} TO ${POSTGRES_USER};
+EOSQL
+    
+    su-exec postgres psql -d ${POSTGRES_DB} -v ON_ERROR_STOP=1 <<-EOSQL
+        GRANT ALL ON SCHEMA public TO ${POSTGRES_USER};
+        GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ${POSTGRES_USER};
+        GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${POSTGRES_USER};
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${POSTGRES_USER};
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO ${POSTGRES_USER};
 EOSQL
 fi
 
