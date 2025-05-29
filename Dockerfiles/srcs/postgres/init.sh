@@ -2,7 +2,9 @@
 set -e
 
 # Correction des permissions (nécessaire car Kubernetes monte avec runAsUser: 0)
+mkdir -p /run/postgresql
 chown -R postgres:postgres /var/lib/postgresql/data
+chown -R postgres:postgres /run/postgresql
 chmod 700 /var/lib/postgresql/data
 
 # Variables d'environnement avec valeurs par défaut basées sur votre ConfigMap/Secret

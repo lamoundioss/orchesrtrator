@@ -7,7 +7,9 @@ RUN apk add --no-cache \
     bash \
     su-exec \
     && mkdir -p /var/lib/postgresql/data \
+    && mkdir -p /run/postgresql \
     && chown -R postgres:postgres /var/lib/postgresql \
+    && chown -R postgres:postgres /run/postgresql \
     && chmod 700 /var/lib/postgresql/data
 
 # Script d'initialisation
