@@ -83,7 +83,7 @@ status_cluster() {
     if vagrant status | grep -q "running"; then
         echo -e "${GREEN}Cluster is running${NC}"
         if [ -f .kube/config ]; then
-            export KUBECONFIG=$PWD/.kube/config
+            export KUBECONFIG="$(pwd)/.kube/config"
             # Ensure TLS verification is skipped for status command
             kubectl config set-cluster default --insecure-skip-tls-verify=true &> /dev/null
             echo "Nodes in the cluster:"

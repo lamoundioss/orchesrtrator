@@ -12,13 +12,15 @@ export POSTGRES_DB="${BILLING_DB_NAME:-billing_db}"
 export POSTGRES_USER="${BILLING_DB_USER:-admin}"
 
 # Décoder le mot de passe de base64 en string
-if [ -n "$BILLING_DB_PASSWORD" ]; then
-    export POSTGRES_PASSWORD=$(echo "$BILLING_DB_PASSWORD" | base64 -d)
-    echo "Mot de passe décodé depuis base64"
-else
-    export POSTGRES_PASSWORD="passer"
-    echo "Utilisation du mot de passe par défaut"
-fi
+# if [ -n "$BILLING_DB_PASSWORD" ]; then
+#     export POSTGRES_PASSWORD=$(echo "$BILLING_DB_PASSWORD" | base64 -d)
+#     echo "Mot de passe décodé depuis base64"
+# else
+#     export POSTGRES_PASSWORD="passer"
+#     echo "Utilisation du mot de passe par défaut"
+# fi
+export POSTGRES_PASSWORD="${BILLING_DB_PASSWORD:-passer}"
+echo "Mot de passe décodé depuis base64 $POSTGRES_PASSWORD"
 
 # Initialiser la base si elle n'existe pas
 if [ ! -s "$PGDATA/PG_VERSION" ]; then
