@@ -29,46 +29,51 @@ spec:
         image: lamoundios7/api-gateway-app:latest
         ports:
         - containerPort: 3000
-        env:
-        - name: PORT
-          valueFrom:
-            configMapKeyRef:
-              name: orchestrator-configmap
-              key: PORT
+        envFrom:
+        - configMapRef:
+            name: orchestrator-configmap
+        - secretRef:
+            name: orchestrator-secret
+        # env:
+        # - name: PORT
+        #   valueFrom:
+        #     configMapKeyRef:
+        #       name: orchestrator-configmap
+        #       key: PORT
         # - name: INVENTORY_SERVICE_URL
         #   valueFrom:
         #     configMapKeyRef:
         #       name: orchestrator-configmap
         #       key: INVENTORY_SERVICE_URL
-        - name: RABBITMQ_HOST
-          # value: "rabbitmq-service"
-          valueFrom:
-            configMapKeyRef:
-              name: orchestrator-configmap
-              key: RABBITMQ_HOST
-        - name: RABBITMQ_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: orchestrator-configmap
-              key: RABBITMQ_PORT
-        - name: RABBITMQ_DEFAULT_USER
-          # value: "guest"
-          valueFrom:
-            configMapKeyRef:
-              name: orchestrator-configmap
-              key: RABBITMQ_DEFAULT_USER
-        - name: RABBITMQ_DEFAULT_PASS
-          # value: "guest"
-          valueFrom:
-            secretKeyRef:
-              name: orchestrator-secret
-              key: RABBITMQ_DEFAULT_PASS
-        - name: INVENTORY_SERVICE_URL
-          # value: "guest"
-          valueFrom:
-            secretKeyRef:
-              name: orchestrator-secret
-              key: INVENTORY_SERVICE_URL
+        # - name: RABBITMQ_HOST
+        #   value: "rabbitmq-service"
+        #   valueFrom:
+        #     configMapKeyRef:
+        #       name: orchestrator-configmap
+        #       key: RABBITMQ_HOST
+        # - name: RABBITMQ_PORT
+        #   valueFrom:
+        #     configMapKeyRef:
+        #       name: orchestrator-configmap
+        #       key: RABBITMQ_PORT
+        # - name: RABBITMQ_DEFAULT_USER
+        #   # value: "guest"
+        #   valueFrom:
+        #     configMapKeyRef:
+        #       name: orchestrator-configmap
+        #       key: RABBITMQ_DEFAULT_USER
+        # - name: RABBITMQ_DEFAULT_PASS
+        #   # value: "guest"
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: orchestrator-secret
+        #       key: RABBITMQ_DEFAULT_PASS
+        # - name: INVENTORY_SERVICE_URL
+        #   # value: "guest"
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: orchestrator-secret
+        #       key: INVENTORY_SERVICE_URL
         resources:
           requests:
             cpu: "100m"
@@ -113,35 +118,40 @@ spec:
     spec:
       containers:
       - name: inventory-app
-        image: pasdev/crud_master-inventory-app:latest
-        env:
-        - name: FLASK_ENV
-          value: "development"
-        - name: INVENTORY_DB_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: orchestrator-configmap
-              key: INVENTORY_DB_HOST
-        - name: INVENTORY_DB_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: orchestrator-configmap
-              key: INVENTORY_DB_PORT
-        - name: INVENTORY_DB_USER
-          valueFrom:
-            configMapKeyRef:
-              name: orchestrator-configmap
-              key: INVENTORY_DB_USER
-        - name: INVENTORY_DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: orchestrator-secret
-              key: INVENTORY_DB_PASSWORD
-        - name: INVENTORY_DB_NAME
-          valueFrom:
-            configMapKeyRef:
-              name: orchestrator-configmap
-              key: INVENTORY_DB_NAME
+        image: lamoundios7/inventory-app:latest
+        envFrom:
+        - configMapRef:
+            name: orchestrator-configmap
+        - secretRef:
+            name: orchestrator-secret
+        # env:
+        # - name: FLASK_ENV
+        #   value: "development"
+        # - name: INVENTORY_DB_HOST
+        #   valueFrom:
+        #     configMapKeyRef:
+        #       name: orchestrator-configmap
+        #       key: INVENTORY_DB_HOST
+        # - name: INVENTORY_DB_PORT
+        #   valueFrom:
+        #     configMapKeyRef:
+        #       name: orchestrator-configmap
+        #       key: INVENTORY_DB_PORT
+        # - name: INVENTORY_DB_USER
+        #   valueFrom:
+        #     configMapKeyRef:
+        #       name: orchestrator-configmap
+        #       key: INVENTORY_DB_USER
+        # - name: INVENTORY_DB_PASSWORD
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: orchestrator-secret
+        #       key: INVENTORY_DB_PASSWORD
+        # - name: INVENTORY_DB_NAME
+        #   valueFrom:
+        #     configMapKeyRef:
+        #       name: orchestrator-configmap
+        #       key: INVENTORY_DB_NAME
         ports:
         - containerPort: 8080
 
@@ -181,19 +191,10 @@ spec:
         ports:
         - containerPort: 5672
         - containerPort: 15672
-        env:
-        - name: RABBITMQ_DEFAULT_PASS
-          valueFrom:
-            secretKeyRef:
-              name: orchestrator-secret
-              key: RABBITMQ_DEFAULT_PASS
-        - name: RABBITMQ_DEFAULT_USER
-          valueFrom:
-            secretKeyRef:
-              name: orchestrator-secret
-              key: RABBITMQ_DEFAULT_USER
         envFrom:
         - configMapRef:
             name: orchestrator-configmap
+        - secretRef:
+            name: orchestrator-secret
 
 

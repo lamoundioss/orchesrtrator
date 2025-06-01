@@ -14,6 +14,7 @@ data:
   INVENTORY_DB_NAME: "movies_db"
   INVENTORY_DB_USER: "admin"
   
+  POSTGRES_USER: "admin"
   # Billing Database
   BILLING_DB_HOST: "billing-database-service"
   BILLING_DB_PORT: "5432"
@@ -31,7 +32,7 @@ data:
   INVENTORY_DATABASE_HOST: "inventory-database"
 
   DB_PORT: "5432"
-  POSTGRES_DB: "admin"
+  POSTGRES_DB: "movies_db"
 
   INVENTORY_SERVICE_URL: http://inventory-app:8080/movies
   READONLY_USER: "reporter"

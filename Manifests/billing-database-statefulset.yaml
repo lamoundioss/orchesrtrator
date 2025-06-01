@@ -45,7 +45,7 @@ spec:
             command:
             - sh
             - -c
-            - pg_isready -U admin -d billing_db
+            - pg_isready -U $BILLING_DB_USER -d $BILLING_DB_NAME
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
@@ -55,7 +55,7 @@ spec:
             command:
             - sh
             - -c
-            - pg_isready -U admin -d billing_db
+            - pg_isready -U $BILLING_DB_USER -d $BILLING_DB_NAME
           initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 5
