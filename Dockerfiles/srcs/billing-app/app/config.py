@@ -8,7 +8,6 @@ class Config:
             password=os.environ.get("POSTGRES_PASSWORD"),
             dbname=os.environ.get("POSTGRES_DB"),
             host=os.environ.get("BILLING_DATABASE_HOST"),
-            port=os.environ.get("DB_PORT"),
         )
     )
     SECRET_KEY = os.getenv("SECRET_KEY")
