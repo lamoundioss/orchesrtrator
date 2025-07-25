@@ -8,11 +8,11 @@ apt-get install -y curl
 TOKEN=$(cat /vagrant/token)
 
 # Set worker IP address (using the private network interface)
-workerIP="192.168.56.11"
+workerIP="192.168.56.60"
 
 # Install K3s as an agent (worker) with proper network configuration
 export INSTALL_K3S_EXEC="--flannel-iface=enp0s8 --node-ip=${workerIP} --node-name=agent"
-curl -sfL https://get.k3s.io | K3S_URL="https://192.168.56.10:6443" K3S_TOKEN="$TOKEN" sh
+curl -sfL https://get.k3s.io | K3S_URL="https://192.168.56.50:6443" K3S_TOKEN="$TOKEN" sh
 
 # Wait for K3s to be ready
 echo "Waiting for K3s agent to be ready..."

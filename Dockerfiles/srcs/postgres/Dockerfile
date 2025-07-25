@@ -1,25 +1,19 @@
 FROM alpine:3.21.3
 
-# Installation avec cleanup immédiat
-RUN apk add --no-cache \
-    postgresql15 \
-    postgresql15-client \
-    bash \
-    su-exec \
-    && mkdir -p /var/lib/postgresql/data \
-    && mkdir -p /run/postgresql \
-    && chown -R postgres:postgres /var/lib/postgresql \
-    && chown -R postgres:postgres /run/postgresql \
-    && chmod 700 /var/lib/postgresql/data
+# Installation de PostgreSQL avec client
+RUN apk add --no-cache postgresql15 postgresql15-client bash
 
-# Script d'initialisation
+# Création des répertoires nécessaires
+RUN mkdir -p /run/postgresql && \
+    mkdir -p /var/lib/postgresql/data && \
+    chown -R postgres:postgres /run/postgresql /var/lib/postgresql
+
+# Copie du script d'initialisation
 COPY init.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/init.sh
 
-# Configuration
-WORKDIR /var/lib/postgresql
-ENV PGDATA=/var/lib/postgresql/data
 EXPOSE 5432
 
-# Démarrer en tant que root pour permettre à Kubernetes de gérer les permissions
+USER postgres
 ENTRYPOINT ["/usr/local/bin/init.sh"]
+CMD ["postgres", "-D", "/var/lib/postgresql/data"]

@@ -5,7 +5,7 @@ apt-get update
 apt-get install -y curl
 
 # Set master IP address (using the private network interface)
-masterIP="192.168.56.10"
+masterIP="192.168.56.50"
 
 # Install K3s as a server (master) with proper network configuration
 export INSTALL_K3S_EXEC="--bind-address=${masterIP} --advertise-address=${masterIP} --flannel-iface=enp0s8 --node-ip=${masterIP} --write-kubeconfig-mode=644 --node-name=master --cluster-init"

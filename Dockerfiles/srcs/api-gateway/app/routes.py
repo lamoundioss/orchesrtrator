@@ -34,7 +34,7 @@ class RabbitMQClient:
             self._connection.close()
 
     def connect(self):
-        with self._lock:
+        # with self._lock:
             try:
                 credentials = pika.PlainCredentials(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD)
                 parameters = pika.ConnectionParameters(Config.RABBITMQ_HOST, 5672, '/', credentials)

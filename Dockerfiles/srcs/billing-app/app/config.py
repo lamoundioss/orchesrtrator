@@ -4,9 +4,9 @@ import os
 class Config:
     SQLALCHEMY_DATABASE_URI = (
         "postgresql://{user}:{password}@{host}:{port}/{dbname}".format(
-            user=os.environ.get("BILLING_DB_USER"),
-            password=os.environ.get("BILLING_DB_PASSWORD"),
-            dbname=os.environ.get("BILLING_DB_NAME"),
+            user=os.environ.get("POSTGRES_USER"),
+            password=os.environ.get("POSTGRES_PASSWORD"),
+            dbname=os.environ.get("POSTGRES_DB"),
             host=os.environ.get("BILLING_DATABASE_HOST"),
             port=os.environ.get("DB_PORT"),
         )
