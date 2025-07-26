@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import ssl
 import time
 import uuid
 from threading import Lock
@@ -36,15 +37,26 @@ class RabbitMQClient:
     def connect(self):
         # with self._lock:
             try:
+                # Configuration SSL pour AWS RabbitMQ
+                ssl_context = ssl.create_default_context()
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = ssl.CERT_NONE
+                
+                # Credentials
                 credentials = pika.PlainCredentials(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD)
-                parameters = pika.ConnectionParameters(Config.RABBITMQ_HOST, 5672, '/', credentials)
+                
+                # Utilisation directe de l'URL AWS avec SSL
+                parameters = pika.URLParameters(Config.RABBITMQ_URL)
+                parameters.credentials = credentials
+                parameters.ssl_options = pika.SSLOptions(ssl_context)
+                
                 self._connection = pika.BlockingConnection(parameters)
                 
                 self._channel = self._connection.channel()
                 self._channel.queue_declare(
                     queue=Config.RABBITMQ_TASK_QUEUE, durable=True
                 )
-                logger.info("Successfully connected to RabbitMQ")
+                logger.info("Successfully connected to AWS RabbitMQ")
                 return True
             except Exception as e:
                 logger.error(f"Connection failed: {str(e)}")

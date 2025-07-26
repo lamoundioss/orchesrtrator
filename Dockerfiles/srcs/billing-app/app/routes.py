@@ -2,6 +2,7 @@ import json
 import logging
 import time
 from threading import Lock, Thread
+import ssl
 
 import pika
 from pika.exceptions import AMQPConnectionError, StreamLostError
@@ -26,8 +27,23 @@ class RabbitMQConsumer:
 
     def connect(self):
         try:
+            # Parse de l'URL AWS RabbitMQ
+            # Format: amqps://b-3ed8f844-e3f3-4d7e-bc8e-6dbd0d6ef23f.mq.us-east-1.on.aws:5671
+            rabbitmq_url = Config.RABBITMQ_URL
+            
+            # Configuration SSL pour AWS RabbitMQ
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            
+            # Credentials
             credentials = pika.PlainCredentials(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD)
-            parameters = pika.ConnectionParameters(Config.RABBITMQ_HOST, 5672, '/', credentials)
+            
+            # Utilisation directe de l'URL avec SSL
+            parameters = pika.URLParameters(rabbitmq_url)
+            parameters.credentials = credentials
+            parameters.ssl_options = pika.SSLOptions(ssl_context)
+            
             self._connection = pika.BlockingConnection(parameters)
             
             self._channel = self._connection.channel()
@@ -35,9 +51,9 @@ class RabbitMQConsumer:
             self._channel.queue_declare(
                 queue=Config.RABBITMQ_RESPONSE_QUEUE, durable=True
             )
-            logger.info("Connected to RabbitMQ")
+            logger.info("Connected to AWS RabbitMQ")
         except Exception as e:
-            logger.error(f"Failed to connect to RabbitMQ: {str(e)}")
+            logger.error(f"Failed to connect to AWS RabbitMQ: {str(e)}")
             self.reconnect()
 
     def reconnect(self):
@@ -124,7 +140,7 @@ class RabbitMQConsumer:
         self._should_reconnect = False
         if self._connection and self._connection.is_open:
             self._connection.close()
-            logger.info("RabbitMQ connection closed")
+            logger.info("AWS RabbitMQ connection closed")
 
 
 # Initialisation globale
