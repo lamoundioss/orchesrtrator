@@ -3,7 +3,7 @@ import os
 
 class Config:
     SQLALCHEMY_DATABASE_URI = (
-        "postgresql://{user}:{password}@{host}:{port}/{dbname}".format(
+        "postgresql://{user}:{password}@{host}/{dbname}".format(
             user=os.environ.get("POSTGRES_USER"),
             password=os.environ.get("POSTGRES_PASSWORD"),
             dbname=os.environ.get("POSTGRES_DB"),
