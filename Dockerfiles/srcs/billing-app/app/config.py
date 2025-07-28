@@ -3,11 +3,12 @@ import os
 
 class Config:
     SQLALCHEMY_DATABASE_URI = (
-        "postgresql://{user}:{password}@{host}/{dbname}".format(
+        "postgresql://{user}:{password}@{host}:{port}/{dbname}".format(
             user=os.environ.get("POSTGRES_USER"),
             password=os.environ.get("POSTGRES_PASSWORD"),
             dbname=os.environ.get("POSTGRES_DB"),
             host=os.environ.get("BILLING_DATABASE_HOST"),
+            port=os.environ.get("DB_PORT"),
         )
     )
     SECRET_KEY = os.getenv("SECRET_KEY")
