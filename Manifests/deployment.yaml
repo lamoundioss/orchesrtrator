@@ -19,7 +19,7 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
               matchExpressions:
-              - key: api-gateway
+              - key: app
                 operator: In
                 values:
                 - api-gateway
@@ -44,7 +44,7 @@ spec:
             memory: "256Mi"
         readinessProbe:
           httpGet:
-            path: /api/movies
+            path: /api/movies/health
             port: 3000
           initialDelaySeconds: 10
           periodSeconds: 5
@@ -53,7 +53,7 @@ spec:
           failureThreshold: 3
         livenessProbe:
           httpGet:
-            path: /api/movies
+            path: /api/movies/health
             port: 3000
           initialDelaySeconds: 15
           periodSeconds: 10
@@ -61,6 +61,7 @@ spec:
           failureThreshold: 3
 
 ---
+
 # Inventory deployment
 apiVersion: apps/v1
 kind: Deployment

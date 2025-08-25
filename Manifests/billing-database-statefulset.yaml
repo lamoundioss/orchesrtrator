@@ -20,19 +20,36 @@ spec:
       - name: billing-database
         image: lamoundios7/billing-database:latest
         securityContext:
-          runAsUser: 0  # Nécessaire pour ajuster l'utilisateur postgres
+          runAsUser: 0  # Nécessaire pour PostgreSQL
           allowPrivilegeEscalation: true
         ports:
         - containerPort: 5432
-        envFrom:
-        - configMapRef:
-            name: orchestrator-configmap
-        - secretRef:
-            name: orchestrator-secret
+        
+        # Variables d'environnement PostgreSQL
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: orchestrator-configmap
+              key: BILLING_DB_NAME
+        - name: POSTGRES_USER
+          valueFrom:
+            configMapKeyRef:
+              name: orchestrator-configmap
+              key: BILLING_DB_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: orchestrator-secret
+              key: BILLING_DB_PASSWORD
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        
         volumeMounts:
         - name: data
           mountPath: /var/lib/postgresql/data
           subPath: postgresql-db
+        
         resources:
           requests:
             memory: "256Mi"
@@ -40,12 +57,14 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
+            
+        # Health checks pour PostgreSQL
         livenessProbe:
           exec:
             command:
             - sh
             - -c
-            - pg_isready -U $BILLING_DB_USER -d $BILLING_DB_NAME
+            - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
@@ -55,17 +74,18 @@ spec:
             command:
             - sh
             - -c
-            - pg_isready -U $BILLING_DB_USER -d $BILLING_DB_NAME
+            - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
           initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 5
           failureThreshold: 3
+          
   volumeClaimTemplates:
   - metadata:
       name: data
     spec:
       accessModes: [ "ReadWriteOnce" ]
+      storageClassName: standard  # Ajuster selon votre cluster
       resources:
         requests:
           storage: 1Gi
-

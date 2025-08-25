@@ -21,79 +21,111 @@ inventory_bp = Blueprint("inventory", __name__, url_prefix="/api/movies")
 order_bp = Blueprint("order", __name__, url_prefix="/api/billing")
 
 
+import json
+import logging
+import ssl
+import uuid
+from threading import Lock
+import pika
+from .config import Config
+
+logger = logging.getLogger(__name__)
+
 class RabbitMQClient:
     def __init__(self):
         self._connection = None
         self._channel = None
         self._lock = Lock()
-        self._reconnect_delay = 5
-        self._should_reconnect = True
         self.connect()
 
     def close(self):
-        if self._connection:
+        if self._connection and not self._connection.is_closed:
             self._connection.close()
 
     def connect(self):
-        # with self._lock:
-            try:
-                # Configuration SSL pour AWS RabbitMQ
+        try:
+            credentials = pika.PlainCredentials(
+                Config.RABBITMQ_USER, 
+                Config.RABBITMQ_PASSWORD
+            )
+            
+            # Détection automatique : AWS RabbitMQ vs RabbitMQ interne Kubernetes
+            if Config.RABBITMQ_URL and Config.RABBITMQ_URL.startswith('amqps://'):
+                # OPTION 1: AWS RabbitMQ avec SSL
+                logger.info("Connecting to external RabbitMQ with SSL")
+                
                 ssl_context = ssl.create_default_context()
                 ssl_context.check_hostname = False
                 ssl_context.verify_mode = ssl.CERT_NONE
                 
-                # Credentials
-                credentials = pika.PlainCredentials(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD)
-                
-                # Utilisation directe de l'URL AWS avec SSL
                 parameters = pika.URLParameters(Config.RABBITMQ_URL)
                 parameters.credentials = credentials
                 parameters.ssl_options = pika.SSLOptions(ssl_context)
                 
                 self._connection = pika.BlockingConnection(parameters)
                 
-                self._channel = self._connection.channel()
-                self._channel.queue_declare(
-                    queue=Config.RABBITMQ_TASK_QUEUE, durable=True
+            elif Config.RABBITMQ_URL and Config.RABBITMQ_URL.startswith('amqp://'):
+                # OPTION 2: RabbitMQ interne Kubernetes sans SSL
+                logger.info("Connecting to internal RabbitMQ without SSL")
+                
+                parameters = pika.URLParameters(Config.RABBITMQ_URL)
+                parameters.credentials = credentials
+                
+                self._connection = pika.BlockingConnection(parameters)
+                
+            else:
+                # OPTION 3: Connexion par paramètres (fallback)
+                logger.info("Connecting to RabbitMQ using connection parameters")
+                
+                connection_params = pika.ConnectionParameters(
+                    host=Config.RABBITMQ_HOST or 'rabbitmq-service',
+                    port=int(Config.RABBITMQ_PORT or 5672),
+                    credentials=credentials,
+                    heartbeat=600,
+                    blocked_connection_timeout=300
                 )
-                logger.info("Successfully connected to AWS RabbitMQ")
-                return True
-            except Exception as e:
-                logger.error(f"Connection failed: {str(e)}")
-                self.reconnect()
-
-    def reconnect(self):
-        if self._should_reconnect:
-            logger.info(f"Reconnecting in {self._reconnect_delay} seconds...")
-            time.sleep(self._reconnect_delay)
-            self.connect()
+                
+                self._connection = pika.BlockingConnection(connection_params)
+            
+            self._channel = self._connection.channel()
+            
+            # Déclarer les queues
+            self._channel.queue_declare(queue=Config.RABBITMQ_TASK_QUEUE, durable=True)
+            self._channel.queue_declare(queue=Config.RABBITMQ_RESPONSE_QUEUE, durable=True)
+            
+            logger.info("Successfully connected to RabbitMQ")
+            return True
+            
+        except Exception as e:
+            logger.error(f"RabbitMQ connection failed: {str(e)}")
+            return False
 
     def publish_message(self, action, data):
-        for attempt in range(3):
-            try:
-                with self._lock:
-                    if not self._connection or self._connection.is_closed:
-                        self.reconnect()
+        try:
+            with self._lock:
+                if not self._connection or self._connection.is_closed:
+                    if not self.connect():
+                        return None
 
-                    correlation_id = str(uuid.uuid4())
-                    self._channel.basic_publish(
-                        exchange="",
-                        routing_key=Config.RABBITMQ_TASK_QUEUE,
-                        properties=pika.BasicProperties(
-                            reply_to=Config.RABBITMQ_RESPONSE_QUEUE,
-                            correlation_id=correlation_id,
-                            delivery_mode=2,
-                        ),
-                        body=json.dumps({"action": action, "data": data}),
-                    )
-                    print(f"Message published with correlation_id: {correlation_id}")
-                    return correlation_id
-            except Exception as e:
-                logger.error(f"Publish attempt {attempt + 1} failed: {str(e)}")
-                self.reconnect()
-                time.sleep(1)
-        return None
-
+                correlation_id = str(uuid.uuid4())
+                
+                self._channel.basic_publish(
+                    exchange="",
+                    routing_key=Config.RABBITMQ_TASK_QUEUE,
+                    properties=pika.BasicProperties(
+                        reply_to=Config.RABBITMQ_RESPONSE_QUEUE,
+                        correlation_id=correlation_id,
+                        delivery_mode=2,  # Persist message
+                    ),
+                    body=json.dumps({"action": action, "data": data}),
+                )
+                
+                logger.info(f"Message published with correlation_id: {correlation_id}")
+                return correlation_id
+                
+        except Exception as e:
+            logger.error(f"Failed to publish message: {str(e)}")
+            return None
 
 # Initialisation
 rabbitmq_client = RabbitMQClient()

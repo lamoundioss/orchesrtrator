@@ -71,6 +71,8 @@ kind: Service
 metadata:
   name: billing-service
   namespace: orchestrator
+  labels:
+    app: billing-app
 spec:
   type: ClusterIP
   selector:
@@ -80,6 +82,7 @@ spec:
       protocol: TCP
       port: 80
       targetPort: 8080
+  clusterIP: None
 
 ---
 
@@ -88,12 +91,14 @@ kind: Service
 metadata:
   name: billing-database-service
   namespace: orchestrator
+  labels:
+    app: billing-database
 spec:
-  type: ClusterIP
+  # type: ClusterIP
   selector:
     app: billing-database
   ports:
-    - name: billing-db
+    - name: postgres
       protocol: TCP
       port: 5432
       targetPort: 5432

@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: billing-app
-        image: lamoundios7/billing-app
+        image: lamoundios7/billing-app:latest
         ports:
         - containerPort: 8080
         envFrom:
@@ -26,6 +26,14 @@ spec:
             name: orchestrator-configmap
         - secretRef:
             name: orchestrator-secret
+        
+        # Variables d'environnement spécifiques pour debugging
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: FLASK_ENV
+          value: "development"
+        
         resources:
           requests:
             memory: "128Mi"
@@ -33,7 +41,26 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "500m"
-        # Waiting for the database to be available
+            
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+            
+        # Script de démarrage avec attente de la base de données
         command: ["/bin/sh", "-c"]
         args:
         - |
@@ -50,5 +77,21 @@ spec:
             echo "Still waiting for database... ($counter seconds elapsed)"
           done
           echo "Database is available, starting application..."
-          # Démarrer l'application Python
-          exec venv/bin/python server.py
+          
+          # Attendre aussi RabbitMQ si configuré
+          if [ ! -z "${RABBITMQ_HOST}" ]; then
+            echo "Waiting for RabbitMQ at ${RABBITMQ_HOST}:${RABBITMQ_PORT}..."
+            timeout=60
+            counter=0
+            while ! nc -z ${RABBITMQ_HOST} ${RABBITMQ_PORT}; do
+              sleep 3
+              counter=$((counter+3))
+              if [ $counter -ge $timeout ]; then
+                echo "Warning: RabbitMQ not available, starting anyway..."
+                break
+              fi
+            done
+          fi
+          
+          echo "Starting billing application..."
+          exec python server.py
