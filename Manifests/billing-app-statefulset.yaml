@@ -64,10 +64,10 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
         - |
-          echo "Waiting for database at ${BILLING_DB_HOST}:${BILLING_DB_PORT}..."
+          echo "Waiting for database at ${BILLING_DB_HOST:-billing-database-service}:${BILLING_DB_PORT:-5432}..."
           timeout=120
           counter=0
-          while ! nc -z ${BILLING_DB_HOST} ${BILLING_DB_PORT}; do
+          while ! nc -z ${BILLING_DB_HOST:-billing-database-service} ${BILLING_DB_PORT:-5432}; do
             sleep 5
             counter=$((counter+5))
             if [ $counter -ge $timeout ]; then
@@ -79,19 +79,34 @@ spec:
           echo "Database is available, starting application..."
           
           # Attendre aussi RabbitMQ si configuré
-          if [ ! -z "${RABBITMQ_HOST}" ]; then
-            echo "Waiting for RabbitMQ at ${RABBITMQ_HOST}:${RABBITMQ_PORT}..."
-            timeout=60
-            counter=0
-            while ! nc -z ${RABBITMQ_HOST} ${RABBITMQ_PORT}; do
-              sleep 3
-              counter=$((counter+3))
-              if [ $counter -ge $timeout ]; then
-                echo "Warning: RabbitMQ not available, starting anyway..."
-                break
-              fi
-            done
+          RABBITMQ_HOST_TO_CHECK=${RABBITMQ_HOST:-rabbitmq-service}
+          RABBITMQ_PORT_TO_CHECK=${RABBITMQ_PORT:-5672}
+          
+          # Si RABBITMQ_URL est définie, extraire le host et port de l'URL
+          if [ ! -z "${RABBITMQ_URL}" ]; then
+            echo "Extracting host and port from RABBITMQ_URL: ${RABBITMQ_URL}"
+            # Extraire le host (entre :// et :port ou /)
+            RABBITMQ_HOST_TO_CHECK=$(echo ${RABBITMQ_URL} | sed -E 's|^[^:]+://([^:/]+).*|\1|')
+            # Extraire le port (après le host)
+            RABBITMQ_PORT_TO_CHECK=$(echo ${RABBITMQ_URL} | sed -E 's|^[^:]+://[^:]+:([0-9]+).*|\1|')
+            # Si pas de port dans l'URL, utiliser le port par défaut
+            if [ "${RABBITMQ_PORT_TO_CHECK}" = "${RABBITMQ_URL}" ]; then
+              RABBITMQ_PORT_TO_CHECK=5672
+            fi
           fi
+          
+          echo "Waiting for RabbitMQ at ${RABBITMQ_HOST_TO_CHECK}:${RABBITMQ_PORT_TO_CHECK}..."
+          timeout=60
+          counter=0
+          while ! nc -z ${RABBITMQ_HOST_TO_CHECK} ${RABBITMQ_PORT_TO_CHECK}; do
+            sleep 3
+            counter=$((counter+3))
+            if [ $counter -ge $timeout ]; then
+              echo "Warning: RabbitMQ not available, starting anyway..."
+              break
+            fi
+            echo "Still waiting for RabbitMQ... ($counter seconds elapsed)"
+          done
           
           echo "Starting billing application..."
           exec python server.py

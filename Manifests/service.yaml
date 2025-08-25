@@ -5,13 +5,13 @@ metadata:
   name: api-gateway
   namespace: orchestrator
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: api-gateway
   ports:
   - port: 3000
     targetPort: 3000
-    # nodePort: 30000
+    nodePort: 30000
 
 ---
 
@@ -91,58 +91,55 @@ kind: Service
 metadata:
   name: billing-database-service
   namespace: orchestrator
-  labels:
-    app: billing-database
 spec:
-  # type: ClusterIP
   selector:
     app: billing-database
   ports:
-    - name: postgres
-      protocol: TCP
-      port: 5432
-      targetPort: 5432
+  - name: postgres
+    port: 5432
+    targetPort: 5432
+  clusterIP: None
 
 
 ---
 
-apiVersion: v1
-kind: Service
-metadata:
-  name: traefik
-  namespace: kube-system
-spec:
-  type: LoadBalancer
-  selector:
-    app.kubernetes.io/name: traefik
-  ports:
-  - name: web
-    nodePort: 31659
-    port: 80
-    protocol: TCP
-    targetPort: web
-  - name: websecure
-    nodePort: 30375
-    port: 443
-    protocol: TCP
-    targetPort: websecure
-  - name: dashboard
-    nodePort: 30000
-    port: 8080
-    protocol: TCP
-    targetPort: 8080
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: traefik
+#   namespace: kube-system
+# spec:
+#   type: LoadBalancer
+#   selector:
+#     app.kubernetes.io/name: traefik
+#   ports:
+#   - name: web
+#     nodePort: 31659
+#     port: 80
+#     protocol: TCP
+#     targetPort: web
+#   - name: websecure
+#     nodePort: 30375
+#     port: 443
+#     protocol: TCP
+#     targetPort: websecure
+#   - name: dashboard
+#     nodePort: 31000
+#     port: 8080
+#     protocol: TCP
+#     targetPort: 8080
 
----
+# ---
 
-apiVersion: v1
-kind: Service
-metadata:
-  name: traefik-dashboard
-  namespace: kube-system
-spec:
-  selector:
-    app.kubernetes.io/name: traefik
-  ports:
-  - port: 8080
-    targetPort: 8080
-    name: dashboard
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: traefik-dashboard
+#   namespace: kube-system
+# spec:
+#   selector:
+#     app.kubernetes.io/name: traefik
+#   ports:
+#   - port: 8080
+#     targetPort: 8080
+#     name: dashboard

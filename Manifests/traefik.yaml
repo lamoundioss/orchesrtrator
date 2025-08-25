@@ -1,31 +1,31 @@
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: api-gateway-ingress
-  namespace: orchestrator
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
-spec:
-  rules:
-  - host: api-gateway.local
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: api-gateway
-            port:
-              number: 3000
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: api-gateway-ingress
+#   namespace: orchestrator
+#   annotations:
+#     traefik.ingress.kubernetes.io/router.entrypoints: web
+# spec:
+#   rules:
+#   - host: api-gateway.local
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: api-gateway
+#             port:
+#               number: 3000
 
-# ---
+# # ---
 
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: stripprefix
-  namespace: kube-system
-spec:
-  stripPrefix:
-    prefixes:
-      - /dashboard
+# apiVersion: traefik.io/v1alpha1
+# kind: Middleware
+# metadata:
+#   name: stripprefix
+#   namespace: kube-system
+# spec:
+#   stripPrefix:
+#     prefixes:
+#       - /dashboard

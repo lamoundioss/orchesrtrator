@@ -23,13 +23,14 @@ class RabbitMQConsumer:
         self._reconnect_delay = 5
         self._should_reconnect = True
         self._started = False
+        self.config = Config()  # Instance de Config pour accéder aux propriétés
         self.connect()
 
     def _create_ssl_context(self):
         """Créer un contexte SSL sécurisé."""
         ssl_context = ssl.create_default_context()
         
-        if Config.DEBUG:
+        if self.config.DEBUG:
             # Développement : SSL relâché
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
@@ -45,16 +46,19 @@ class RabbitMQConsumer:
     def connect(self):
         try:
             credentials = pika.PlainCredentials(
-                Config.RABBITMQ_USER, 
-                Config.RABBITMQ_PASSWORD
+                self.config.RABBITMQ_USER, 
+                self.config.RABBITMQ_PASSWORD
             )
             
-            if Config.is_rabbitmq_ssl:
+            # Récupérer l'URL de connexion (maintenant ça va fonctionner)
+            connection_url = self.config.rabbitmq_connection_url
+            
+            if self.config.is_rabbitmq_ssl:
                 # Connexion SSL (AWS RabbitMQ ou RabbitMQ externe)
-                logger.info(f"Connecting to RabbitMQ with SSL: {Config.rabbitmq_connection_url}")
+                logger.info(f"Connecting to RabbitMQ with SSL: {connection_url}")
                 
                 ssl_context = self._create_ssl_context()
-                parameters = pika.URLParameters(Config.rabbitmq_connection_url)
+                parameters = pika.URLParameters(connection_url)
                 parameters.credentials = credentials
                 parameters.ssl_options = pika.SSLOptions(ssl_context)
                 
@@ -62,18 +66,18 @@ class RabbitMQConsumer:
                 
             else:
                 # Connexion non-SSL (RabbitMQ interne Kubernetes)
-                logger.info(f"Connecting to RabbitMQ without SSL: {Config.rabbitmq_connection_url}")
+                logger.info(f"Connecting to RabbitMQ without SSL: {connection_url}")
                 
-                if Config.RABBITMQ_URL:
+                if self.config.RABBITMQ_URL:
                     # Utiliser l'URL complète
-                    parameters = pika.URLParameters(Config.rabbitmq_connection_url)
+                    parameters = pika.URLParameters(connection_url)
                     parameters.credentials = credentials
                     self._connection = pika.BlockingConnection(parameters)
                 else:
                     # Utiliser les paramètres individuels
                     connection_params = pika.ConnectionParameters(
-                        host=Config.RABBITMQ_HOST,
-                        port=int(Config.RABBITMQ_PORT),
+                        host=self.config.RABBITMQ_HOST,
+                        port=int(self.config.RABBITMQ_PORT),
                         credentials=credentials,
                         heartbeat=600,
                         blocked_connection_timeout=300
@@ -84,12 +88,12 @@ class RabbitMQConsumer:
             
             # Déclarer les queues avec options de durabilité
             self._channel.queue_declare(
-                queue=Config.RABBITMQ_TASK_QUEUE, 
+                queue=self.config.RABBITMQ_TASK_QUEUE, 
                 durable=True,
                 arguments={'x-message-ttl': 300000}  # TTL 5 minutes
             )
             self._channel.queue_declare(
-                queue=Config.RABBITMQ_RESPONSE_QUEUE, 
+                queue=self.config.RABBITMQ_RESPONSE_QUEUE, 
                 durable=True,
                 arguments={'x-message-ttl': 300000}
             )
@@ -120,7 +124,7 @@ class RabbitMQConsumer:
                     self._channel.basic_qos(prefetch_count=1)
                     
                     self._channel.basic_consume(
-                        queue=Config.RABBITMQ_TASK_QUEUE,
+                        queue=self.config.RABBITMQ_TASK_QUEUE,
                         on_message_callback=self._process_message,
                         auto_ack=False,
                     )
