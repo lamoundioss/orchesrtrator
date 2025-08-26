@@ -7,30 +7,29 @@ data:
   # API Gateway
   PORT: "3000"
   
-  # Inventory Database
+  # RabbitMQ interne Kubernetes (SANS SSL)
+  RABBITMQ_HOST: "rabbitmq-service.orchestrator.svc.cluster.local"
+  RABBITMQ_PORT: "5672"
+  # Pas de RABBITMQ_URL pour forcer l'utilisation des paramètres de connexion
+  
+  # Databases
   INVENTORY_DB_HOST: "inventory-database"
   INVENTORY_DB_PORT: "5432"
   INVENTORY_DB_NAME: "movies_db"
   INVENTORY_DB_USER: "admin"
   
-  POSTGRES_USER: "admin"
-  # Billing Database
   BILLING_DB_HOST: "billing-database-service"
   BILLING_DB_PORT: "5432"
   BILLING_DB_NAME: "billing_db"
   BILLING_DB_USER: "ndiogou"
   
-  # RabbitMQ Configuration - CORRIGÉ
-  RABBITMQ_HOST: "amqp://rabbitmq-service:5672"
-  RABBITMQ_PORT: "5672"
-  
-  ############################################
-  BILLING_DATABASE_HOST: "billing-database-service"
-  INVENTORY_DATABASE_HOST: "inventory-database"
-  
+  POSTGRES_USER: "admin"
   DB_PORT: "5432"
-  POSTGRES_DB: "movies_db"
+  POSTGRES_DB: "movies"
   
+  # Services
   INVENTORY_SERVICE_URL: "http://inventory-app:8080/movies"
   READONLY_USER: "reporter"
   APP_DB_NAME: "app_analytics"
+  BILLING_DATABASE_HOST: "billing-database-service"
+  INVENTORY_DATABASE_HOST: "inventory-database"

@@ -28,13 +28,13 @@ class Config:
     RABBITMQ_TASK_QUEUE = "billing_queue"
     RABBITMQ_RESPONSE_QUEUE = "response_queue"
     
-    @property
-    def rabbitmq_connection_url(self):
-        """Détermine l'URL de connexion RabbitMQ."""
-        if self.RABBITMQ_URL:
-            return self.RABBITMQ_URL
-        else:
-            return f"amqp://{self.RABBITMQ_HOST}:{self.RABBITMQ_PORT}"
+    # @property
+    # def rabbitmq_connection_url(self):
+    #     """Détermine l'URL de connexion RabbitMQ."""
+    #     if self.RABBITMQ_URL:
+    #         return self.RABBITMQ_URL
+    #     else:
+    #         return f"amqp://{self.RABBITMQ_HOST}:{self.RABBITMQ_PORT}"
     
     @property
     def is_rabbitmq_ssl(self):
